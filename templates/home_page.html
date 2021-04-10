@@ -1,0 +1,85 @@
+{% extends 'block.html' %}
+{% block subcontent %}
+<div>
+	<h4>Prediction of Score (Team Batting First)</h4>
+	<form class="form-row" method="post" action="/prediction">
+		<div class="row">
+
+			<div class="col-sm-12 col-lg-6">
+				<label for="batting_team">Batting Team
+					<select class="btn btn-toolbar btn-secondary" name="batting_team" >
+						{% for team in teams %}
+						<option value="{{team}}">{{team}}</option>
+						{% endfor %}
+					</select>
+				</label>
+			</div>
+			<div class="col-sm-12 col-lg-6">
+				<label for="bowling_team">Bowling Team
+					<select class="btn btn-toolbar btn-secondary" name="bowling_team">
+						{% for team in teams %}
+						<option value="{{team}}">{{team}}</option>
+						{% endfor %} 
+					</select>
+				</label>
+			</div>
+			<div class="col-sm-12 col-lg-6">
+				<label for="runs">Present Score
+					<input class="btn btn-toolbar btn-secondary" name="runs" required type="number" min="0" max="300">
+				</label>
+			</div>
+			<div class="col-sm-12 col-lg-6">
+				<label for="wickets_last_5">Wickets Fell in Last 5 Overs
+					<input class="btn btn-toolbar btn-secondary" name="wickets_last_5" required type="number"  min="0"  max="10">
+				</label>
+			</div>
+			<div class="col-sm-12 col-lg-6">
+				<label for="overs"> Overs Bowled
+					<input class="btn btn-toolbar btn-secondary" name="overs" required type="number" min="6" max="20">
+				</label>
+			</div>
+			<div class="col-sm-12 col-lg-6">
+				<label for="runs_last_5">Runs Scores in Last 5 Overs
+					<input class="btn btn-toolbar btn-secondary" name="runs_last_5" required type="number" min="0" max="300">
+				</label>
+			</div>
+			<div class="col-sm-12 col-lg-6">
+				<label for="runs"> Current Wickets
+					<input class="btn btn-toolbar btn-secondary" name="wickets" required type="number" min="0" max="10">
+				</label>
+			</div>
+			<div class="col-sm-12 col-lg-6">
+				<label for="model">ML Models 
+					<a href="#" class="badge  badge-pill badge-light" data-target="#info" data-toggle="modal" >Accuracy Details</a>
+
+					<select class="btn btn-toolbar btn-secondary" name="model">
+						{% for model in models %}
+						<option value="{{model}}">{{model}}</option>
+						{% endfor %}
+					</select>
+				</label>
+			</div>
+			<div class="col-12">
+				<input class="btn btn-primary" required type="submit" value="Click to Predict Score">
+			</div>
+		</div> 
+	</form>
+</div>
+<div class="modal fade" id="info" aria-hidden="true" tabindex="-1" >
+	<div class=" modal-dialog-centered modal-dialog " >
+		<div class="modal-content">
+			<div class="modal-header">
+				<h4 class="modal-title">Accuracy Details of Algorithms</h4>
+				<button class="close" type="button" aria-label="Close" data-dismiss="modal" >
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				{% for i in info %}<b>{{i}} &ensp;</b> : Accuracy : <b>{{info[i]['accuracy']}}% &ensp;</b>Error (RMSE) : <b>{{info[i]['error']}}</b>
+				<br>
+				{% endfor %}
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

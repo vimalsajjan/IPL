@@ -1,0 +1,26 @@
+{% extends 'block.html' %}
+{% block subcontent %}
+<div class="row text-center" >
+	<div class="col-sm-4" >
+		<div class="badge badge-info">Batting Team </div>
+		<h3>{{info['batting_team']}}</h3>
+	</div>
+	<div class="col-sm-4">
+		<div class="badge badge-info">Overs Bowled </div>
+		<h3>{{info['overs']}}</h3>
+	</div>
+	<div class="col-sm-4">
+		<div class="badge badge-info">Present Score </div>
+	<h3>{{info['runs']}} / {{info['wickets']}}</h3>
+</div>
+	<h2 class="col-sm-12">
+		Predicted Score : <b>{{score}}</b>
+	</h2>
+</div>
+<div class="col-sm-12 ">
+	In this prediction, <b class="text-info ">{{info['model']}}</b> has achieved a Test Accuracy of <b class="text-success">{{model[info['model']]['accuracy']}}%</b> with Root Mean Squared Error (RMSE) of <b class="text-danger">{{model[info['model']]['error']}}</b>.
+</div>
+<a href="/" class="btn btn-info "  required type="submit"> 
+	Click to Predict Another Score
+</a>
+{% endblock %}

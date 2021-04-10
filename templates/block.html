@@ -1,0 +1,68 @@
+{% block cdn %} <!-- Cloudflare  -->
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+{% endblock %}
+{% block title %}
+	<link href="{{url_for('static', filename='logo.ico')}}">
+<head>
+	<title> Prediction of IPL Score - Vimal Sajjan (S1906428)
+	</title>
+</head>
+{% endblock %}
+{% block style %}
+<style>
+	body {
+		background: url("{{url_for('static', filename='IPLcap.jpg')}}");
+		background-position: center top;
+		color: white;
+		background-repeat: no-repeat;
+  		background-attachment: fixed;
+  		background-size: cover;
+	}
+	.card{ 
+		text-align: center;
+		align-content: center;
+		margin-top: 5px
+		border-radius: 20px;
+		background: rgba(5, 5, 5, 0.6);
+		box-shadow: 0 4px 20px black;
+	}
+    .modal-content{
+    	background-color: gray;
+    	text-align: left;
+		border-radius: 15px;
+		color: white;
+	}
+	input, select{
+		width: 200px;
+		color: black;
+	} 
+</style>
+{% endblock %}
+
+{% block content %}
+
+	<div class="header text-center">
+		<h1> Prediction of IPL Score using <br>
+			<span class='text-primary'> 
+				Supervised Machine Learning Algorithms
+			</span>
+		</h1>
+	</div>
+
+	<div class="card w-50 m-auto">
+		{% block subcontent %}
+		{% endblock %}
+	</div>
+
+	{% block bottom_card %}
+
+		<div class="card w-50 m-auto">
+			{% include 'bottom_card.html' %}
+		</div>
+	{% endblock %}
+
+{% endblock %}

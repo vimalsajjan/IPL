@@ -1,0 +1,547 @@
+# Prediction of IPL Score (Teams Batting First) using Supervised Machine Learning Algorithms 
+
+Demonstration of how efficiently Supervised Machine Learning Algorithms can perform in solving a regression problem using IPL Dataset (https://www.kaggle.com/vimalsajjan/ipldata).
+
+Features of the Dataset are as follows:
+
+1. mid: Unique match id. 
+
+2. date: Date of match.
+
+3. venue: Name of the Stadium.
+
+4. battingteam: Name of the Batting team.
+
+5. bowlingteam: Name of the Bowling team name.
+
+6. batsman: Batsman who faced that particular ball.
+
+7. bowler: Bowler who bowled that particular ball.
+
+8. runs: Runs scored by team till that point.
+
+9. wickets: Number of Wickets fallen of the team till that point.
+
+10. overs: Number of Overs bowled till that point.
+
+11. runslast5: Runs scored in last 5 overs.
+
+12. wicketslast5: Number of Wickets that fell in last 5 overs.
+
+13. striker: max(runs scored by striker, runs scored by non-striker).
+
+14. non-striker: min(runs scored by striker, runs scored by non-striker).
+
+15. total: Total runs scored by batting team first.
+
+# Import Libraries and reading data into dataframes
+
+#pandas and numpy libraries are imported
+
+import pandas as pd
+import numpy as np
+
+#Reading the data into dataframes and shape of the dataset is shown
+
+IPLdata = pd.read_csv('IPLdata\IPLdata.csv')
+print("Shape of the IPLdata:", IPLdata.shape)
+
+# Data Analysis
+
+#random 5 rows of the IPLdata is displayed
+
+IPLdata.sample(5)
+
+#Numerical Values of the IPLdata
+
+IPLdata.describe()
+
+#Data types and not null counts of the features are displayed
+
+IPLdata.info()
+
+# count of Unique Values in each feature
+
+IPLdata.nunique()
+
+# Datatypes of all the features
+
+IPLdata.dtypes
+
+# Cleaning Data 
+
+# list of all features
+
+IPLdata.columns
+
+#There are some features such as mid, date, venue, batsman, bowler and stricker, that are not useful for the prediction of score
+
+unrelated_features = ['mid', 'date', 'venue','batsman', 'bowler', 'striker', 'non-striker']
+print("Before dropping unrelated features :", IPLdata.shape)
+
+# Dropping unrelated features
+
+IPLdata = IPLdata.drop(unrelated_features, axis=1) 
+print("After dropping unrelated features :", IPLdata.shape)
+
+
+IPLdata.sample(5)
+
+# Choosing only teams which are available in most seasons 
+
+teams = ['Chennai Super Kings', 'Mumbai Indians', 'Rajasthan Royals', 'Kolkata Knight Riders', 
+         'Kings XI Punjab', 'Sunrisers Hyderabad', 'Delhi Daredevils','Royal Challengers Bangalore']
+
+print("Before deleting the teams which are not available in most seasons:\n" , IPLdata.shape)
+
+# isin() is a method that helps in selecting rows with having a particular value in a particular column.
+
+IPLdata = IPLdata[(IPLdata['batting_team'].isin(teams)) & (IPLdata['bowling_team'].isin(teams))]
+
+print("After deleting the teams which are not available in most seasons:\n" , IPLdata.shape)
+
+print("\nTeams which are available in most seasons : \n\n" , 
+      "Batting Teams : \n\n",IPLdata['batting_team'].unique(),"\n\n Bowling Teams: \n\n",IPLdata['bowling_team'].unique())
+
+IPLdata.sample(5)
+
+# this dataset has two features runs_last_5 - runs scored in last 5 overs and wickets_last_5- wickets fell in last 5 overs, 
+# in cricket first 6 overs has power play (fielding restructions). To make prediction of score more accurate
+# or to satisfy the conditions of two features for prediction, first 6 overs are deleted 
+
+print("Before deletinig powerplay Overs :", IPLdata.shape)
+
+IPLdata = IPLdata[IPLdata['overs'] >= 6.0]
+
+print("After deleting powerplay Overs :", IPLdata.shape)
+
+IPLdata.sample(5)
+
+# Visualization
+
+# HeatMap shows the correlation between the features
+
+import matplotlib.pyplot as plt
+import seaborn as sns 
+
+figure = plt.figure(figsize=(10,10))
+sns.heatmap(IPLdata.corr(), annot=True, cmap="YlGnBu")
+
+# Data Preprocessing
+
+# Here for features - 'batting_team' and 'bowling_team', the names of the teams are changed into numbers using encoder
+
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+LabelEncoder = LabelEncoder()
+for column in ['batting_team', 'bowling_team']: 
+    IPLdata[column] = LabelEncoder.fit_transform(IPLdata[column])
+IPLdata.sample(5)
+
+# transformation of the column
+
+from sklearn.compose import ColumnTransformer
+columnTransformer = ColumnTransformer([('encoder', OneHotEncoder(), [0, 1])], remainder='passthrough')
+
+IPLdata = np.array(columnTransformer.fit_transform(IPLdata))
+
+column = ['batting_team_Chennai Super Kings', 'batting_team_Mumbai Indians', 'batting_team_Rajasthan Royals',
+          'batting_team_Kolkata Knight Riders', 'batting_team_Kings XI Punjab', 'batting_team_Sunrisers Hyderabad',
+          'batting_team_Delhi Daredevils','batting_team_Royal Challengers Bangalore',
+          
+          'bowling_team_Chennai Super Kings', 'bowling_team_Mumbai Indians','bowling_team_Rajasthan Royals',
+          'bowling_team_Kolkata Knight Riders', 'bowling_team_Kings XI Punjab','bowling_team_Sunrisers Hyderabad',
+          'bowling_team_Delhi Daredevils','bowling_team_Royal Challengers Bangalore', 
+          
+          'runs', 'wickets', 'overs','runs_last_5', 'wickets_last_5', 'total']
+
+FinalIPLdata = pd.DataFrame(IPLdata, columns=column)
+
+# Visualize Encoded and final cleaned IPLdata
+FinalIPLdata.sample(5)
+
+print("Shape of the FinalIPLdata:", FinalIPLdata.shape)
+
+#Numerical Values of the FinalIPLdata
+
+FinalIPLdata.describe()
+
+#Data types and not null counts of the features are displayed
+
+FinalIPLdata.info()
+
+# count of Unique Values in each feature
+
+FinalIPLdata.nunique()
+
+# Data-types of all features
+
+FinalIPLdata.dtypes
+
+# the pre-processed is exported 
+
+FinalIPLdata.to_csv('IPLdata\FinalIPLdata.csv')
+
+# Visualization of Cleaned Data
+
+import matplotlib.pyplot as plt
+figure = plt.figure(figsize=(20,20))
+sns.heatmap(FinalIPLdata.corr(), annot=True, cmap="YlGnBu",)
+
+
+# Buinding Models
+
+##  Target feature is selected and dataset is split into Training and Testing data
+
+# the below snippet drops the target feature 
+
+features = FinalIPLdata.drop(['total'], axis=1)
+
+# the target feature is labeled as "target" 
+
+target = FinalIPLdata['total']
+
+# training and testing data is split into 75 : 25 
+
+from sklearn.model_selection import train_test_split
+
+train_features, test_features, train_target, test_target = train_test_split(features, target, test_size=0.25, shuffle=True)
+print("Training Set :",train_features.shape,"\nTesting Set :", test_features.shape)
+
+# Keeping track of model perfomances.The dict() function creates a dictionary.
+models = dict()
+
+### ElasticNet Regression
+
+#code for ElasticNet Regression
+
+from sklearn.linear_model import ElasticNet 
+elastic_net = ElasticNet() 
+elastic_net.fit(train_features, train_target)
+
+# Model Evaluation
+
+train_score_elastic_net = str(elastic_net.score(train_features, train_target)*100)
+test_score_elastic_net = str(elastic_net.score(test_features, test_target)*100)
+print("Train Score : ",train_score_elastic_net[:5],"%\nTest Score : ",test_score_elastic_net[:5],"%")
+models["elastic_net"] = test_score_elastic_net
+
+
+from sklearn.metrics import mean_absolute_error as mae, mean_squared_error as mse
+
+print("****Model Evaluation - ElasticNet Regression **** \n")
+
+print("Mean Absolute Error (MAE): {}".format(mae(test_target, elastic_net.predict(test_features))))
+print("Mean Squared Error (MSE): {}".format(mse(test_target, elastic_net.predict(test_features))))
+print("Root Mean Squared Error (RMSE): {}".format(np.sqrt(mse(test_target, elastic_net.predict(test_features)))))
+
+### Ridge Regression
+
+#Code for Ridge Regression
+
+from sklearn.linear_model import Ridge
+
+ridge = Ridge()
+ridge.fit(train_features, train_target) 
+
+
+# Model Evaluation
+
+train_score_ridge = str(ridge.score(train_features, train_target)*100)
+test_score_ridge = str(ridge.score(test_features, test_target)*100)
+print("Train Score : ",train_score_ridge[:5],"%\nTest Score : ",test_score_ridge[:5],"%")
+models["ridge"] = test_score_ridge
+
+
+print("****Model Evaluation - Ridge Regression **** \n")
+
+print("Mean Absolute Error (MAE): {}".format(mae(test_target, ridge.predict(test_features))))
+print("Mean Squared Error (MSE): {}".format(mse(test_target, ridge.predict(test_features))))
+print("Root Mean Squared Error (RMSE): {}".format(np.sqrt(mse(test_target, ridge.predict(test_features)))))
+
+### KNeighborsRegressor
+
+#Code for #Code for Random Forest Regression
+
+from sklearn import neighbors
+
+for K in range(1):
+    K = K+1
+    
+KNN = neighbors.KNeighborsRegressor(n_neighbors = K)
+KNN.fit(train_features, train_target) 
+
+# Model Evaluation
+
+train_score_KNN = str(KNN.score(train_features, train_target)*100)
+test_score_KNN = str(KNN.score(test_features, test_target)*100)
+print("Train Score : ",train_score_KNN[:5],"%\nTest Score : ",test_score_KNN[:5],"%")
+models["KNN"] = test_score_KNN
+
+
+print("****Model Evaluation - Random Forest **** \n")
+
+print("Mean Absolute Error (MAE): {}".format(mae(test_target, KNN.predict(test_features))))
+print("Mean Squared Error (MSE): {}".format(mse(test_target, KNN.predict(test_features))))
+print("Root Mean Squared Error (RMSE): {}".format(np.sqrt(mse(test_target, KNN.predict(test_features)))))
+
+### Random Forest Regression
+
+#Code for Random Forest Regression
+
+from sklearn.ensemble import RandomForestRegressor
+random_forest = RandomForestRegressor(n_estimators=80)
+
+# the below snippet trains the data
+random_forest.fit(train_features, train_target)
+
+# Model Evaluation
+
+train_score_random_forest = str(random_forest.score(train_features, train_target)*100)
+test_score_random_forest = str(random_forest.score(test_features, test_target)*100)
+print("Train Score : ",train_score_random_forest[:5],"%\nTest Score : ",test_score_random_forest[:5],"%")
+models["random_forest"] = test_score_random_forest
+
+print("****Model Evaluation - Random Forest **** \n")
+
+print("Mean Absolute Error (MAE): {}".format(mae(test_target, random_forest.predict(test_features))))
+print("Mean Squared Error (MSE): {}".format(mse(test_target, random_forest.predict(test_features))))
+print("Root Mean Squared Error (RMSE): {}".format(np.sqrt(mse(test_target, random_forest.predict(test_features)))))
+
+### Decision Tree Regressor
+
+#code for Decision Tree Regressor
+
+from sklearn.tree import DecisionTreeRegressor
+decision_tree = DecisionTreeRegressor()
+
+# the below snippet trains the data
+decision_tree.fit(train_features, train_target)
+
+# Model Evaluation
+
+train_score_decision_tree = str(decision_tree.score(train_features, train_target) * 100)
+test_score_decision_tree = str(decision_tree.score(test_features, test_target) * 100)
+print("Train Score : ",train_score_decision_tree[:5],"%\nTest Score : ",test_score_decision_tree[:5],"%")
+models["decision_tree"] = test_score_decision_tree
+
+print("****Model Evaluation - Decision Tree **** \n")
+
+print("Mean Absolute Error (MAE): {}".format(mae(test_target, decision_tree.predict(test_features))))
+print("Mean Squared Error (MSE): {}".format(mse(test_target, decision_tree.predict(test_features))))
+print("Root Mean Squared Error (RMSE): {}".format(np.sqrt(mse(test_target, decision_tree.predict(test_features)))))
+
+### Neural Networks
+
+#code for Neural Networks
+
+from sklearn.neural_network import MLPRegressor
+neural_networks = MLPRegressor(activation='logistic',max_iter=3000)
+
+# the below snippet trains the data
+neural_networks.fit(train_features, train_target)
+
+# Model Evaluation
+
+train_score_neural_networks = str(neural_networks.score(train_features, train_target)*100)
+test_score_neural_networks = str(neural_networks.score(test_features, test_target)*100)
+print("Train Score :",train_score_neural_networks[:5],"%\nTest Score : ",test_score_neural_networks[:5],"%")
+models["neural_networks"] = test_score_neural_networks 
+
+print("****Model Evaluation -  Neural Networks **** \n")
+
+print("Mean Absolute Error (MAE): {}".format(mae(test_target, neural_networks.predict(test_features))))
+print("Mean Squared Error (MSE): {}".format(mse(test_target, neural_networks.predict(test_features))))
+print("Root Mean Squared Error (RMSE): {}".format(np.sqrt(mse(test_target, neural_networks.predict(test_features)))))
+
+### Support Vector Machine
+
+from sklearn.svm import SVR
+support_vector_machine = SVR()
+# the below snippet trains the data
+support_vector_machine.fit(train_features, train_target)
+
+# Model Evaluation
+
+train_score_support_vector_machine = str(support_vector_machine.score(train_features, train_target)*100)
+test_score_support_vector_machine = str(support_vector_machine.score(test_features, test_target)*100)
+print("Train Score : ",train_score_support_vector_machine[:5],"%\nTest Score : ",test_score_support_vector_machine[:5],"%")
+models["svm"] = test_score_support_vector_machine 
+
+print("****Model Evaluation -  Support Vector Machine **** \n")
+
+print("Mean Absolute Error (MAE): {}".format(mae(test_target, support_vector_machine.predict(test_features))))
+print("Mean Squared Error (MSE): {}".format(mse(test_target, support_vector_machine.predict(test_features))))
+print("Root Mean Squared Error (RMSE): {}".format(np.sqrt(mse(test_target, support_vector_machine.predict(test_features)))))
+
+### Lasso Regression
+
+from sklearn.linear_model import LassoCV
+lasso_regression = LassoCV()
+
+# the below snippet trains the data
+lasso_regression.fit(train_features, train_target)
+
+# Model Evaluation
+
+train_score_lasso_regression = str(lasso_regression.score(train_features, train_target)*100)
+test_score_lasso_regression = str(lasso_regression.score(test_features, test_target)*100)
+print("Train Score : ",train_score_lasso_regression[:5],"%\nTest Score : ",test_score_lasso_regression[:5],"%")
+models["lasso_regression"] = test_score_lasso_regression
+
+print("****Model Evaluation -  Lasso Regression **** \n")
+
+print("Mean Absolute Error (MAE): {}".format(mae(test_target, lasso_regression.predict(test_features))))
+print("Mean Squared Error (MSE): {}".format(mse(test_target, lasso_regression.predict(test_features))))
+print("Root Mean Squared Error (RMSE): {}".format(np.sqrt(mse(test_target, lasso_regression.predict(test_features)))))
+
+### Linear Regression
+
+from sklearn.linear_model import LinearRegression
+linear_regression = LinearRegression()
+
+# the below snippet trains the data
+linear_regression.fit(train_features, train_target)
+
+# Model Evaluation
+
+train_score_linear_regression = str(linear_regression.score(train_features, train_target) * 100)
+test_score_linear_regression = str(linear_regression.score(test_features, test_target) * 100)
+print("Train Score : ",train_score_linear_regression[:5],"%\nTest Score : ",test_score_linear_regression[:5],"%")
+models["linear_regression"] = test_score_linear_regression
+
+print("****Model Evaluation -  Lasso Regression **** \n")
+
+print("Mean Absolute Error (MAE): {}".format(mae(test_target, linear_regression.predict(test_features))))
+print("Mean Squared Error (MSE): {}".format(mse(test_target, linear_regression.predict(test_features))))
+print("Root Mean Squared Error (RMSE): {}".format(np.sqrt(mse(test_target, linear_regression.predict(test_features)))))
+
+### AdaBoost Model using Linear Regression as the base learner
+
+
+# AdaBoost Model using Linear Regression as the base learner
+
+from sklearn.ensemble import AdaBoostRegressor
+adb_boost_regressor = AdaBoostRegressor(base_estimator=linear_regression)
+adb_boost_regressor.fit(train_features, train_target)
+
+# Model Evaluationn
+
+train_score_adb_boost_regressor = str(adb_boost_regressor.score(train_features, train_target) * 100)
+test_score_adb_boost_regressor = str(adb_boost_regressor.score(test_features, test_target) * 100)
+print("Train Score : ",train_score_adb_boost_regressor[:5],"%\nTest Score : ",test_score_adb_boost_regressor[:5],"%")
+models["adb"] = test_score_adb_boost_regressor
+
+
+print("****Model Evaluation -  AdaBoost Model using Linear Regression as the base learner **** \n")
+
+print("Mean Absolute Error (MAE): {}".format(mae(test_target, adb_boost_regressor.predict(test_features))))
+print("Mean Squared Error (MSE): {}".format(mse(test_target, adb_boost_regressor.predict(test_features))))
+print("Root Mean Squared Error (RMSE): {}".format(np.sqrt(mse(test_target, adb_boost_regressor.predict(test_features)))))
+
+### Best Model 
+
+# Bar graph is ploted so cheeck which algorithm has performed better
+
+import matplotlib.pyplot as plt
+from seaborn import barplot
+
+figure = plt.figure(figsize=(18,10))
+
+model_names = list(models.keys())
+accuracy = list(map(float, models.values()))
+barplot(model_names, accuracy)
+
+Random Forest Regressor has performed well when compared to other algorithms
+
+# Predictions of Score using Random Forest
+
+def prediction_of_score(batting_team, bowling_team, runs, wickets, overs, runs_last_5, wickets_last_5, model = random_forest):
+  array = []
+
+  # Batting Team
+  if batting_team == 'Chennai Super Kings':
+    array = array + [1,0,0,0,0,0,0,0]
+  elif batting_team == 'Mumbai Indians':
+    array = array + [0,1,0,0,0,0,0,0]
+  elif batting_team == 'Rajasthan Royals':
+    array = array + [0,0,1,0,0,0,0,0]
+  elif batting_team == 'Kolkata Knight Riders':
+    array = array + [0,0,0,1,0,0,0,0]
+  elif batting_team == 'Kings XI Punjab':
+    array = array + [0,0,0,0,1,0,0,0]
+  elif batting_team == 'Sunrisers Hyderabad':
+    array = array + [0,0,0,0,0,1,0,0]
+  elif batting_team == 'Delhi Daredevils':
+    array = array + [0,0,0,0,0,0,1,0]
+  elif batting_team == 'Royal Challengers Bangalore':
+    array = array + [0,0,0,0,0,0,0,1]
+
+  # Bowling Team
+  if bowling_team == 'Chennai Super Kings':
+    array = array + [1,0,0,0,0,0,0,0]
+  elif bowling_team == 'Mumbai Indians':
+    array = array + [0,1,0,0,0,0,0,0]
+  elif bowling_team == 'Rajasthan Royals':
+    array = array + [0,0,1,0,0,0,0,0]
+  elif bowling_team == 'Kolkata Knight Riders':
+    array = array + [0,0,0,1,0,0,0,0]
+  elif bowling_team == 'Kings XI Punjab':
+    array = array + [0,0,0,0,1,0,0,0]
+  elif bowling_team == 'Sunrisers Hyderabad':
+    array = array + [0,0,0,0,0,1,0,0]
+  elif bowling_team == 'Delhi Daredevils':
+    array = array + [0,0,0,0,0,0,1,0]
+  elif bowling_team == 'Royal Challengers Bangalore':
+    array = array + [0,0,0,0,0,0,0,1]
+
+  array = array + [runs, wickets, overs, runs_last_5, wickets_last_5]
+  array = np.array([array])
+  predictions = model.predict(array)
+  return int(round(predictions[0]))
+
+
+### Testing the model with sample data
+
+- Batting Team : **Kolkata Knight Riders**
+- Bowling Team : **Royal Challengers Bangalore**
+- Final Score : **222/3**
+
+batting_team='Kolkata Knight Riders'
+bowling_team='Royal Challengers Bangalore'
+score = prediction_of_score(batting_team, bowling_team, overs=8, runs=73, wickets=1, runs_last_5=47, wickets_last_5=1)
+print("Predicted Score is",score, "\nReal Score is 222")
+
+From the above test the score may not match because it is an exceptional case that, In cricket some times more runs are scored in last 2 or 3 overs. Since this match was high scoring game the algorithm has predicted according to that situation.
+
+### Testing the model with sample data
+
+- Batting Team : **Rajasthan Royals**
+- Bowling Team : **Delhi Daredevils**
+- Final Score : **129/8**
+
+batting_team='Rajasthan Royals'
+bowling_team='Delhi Daredevils'
+score = prediction_of_score(batting_team, bowling_team, overs=10, runs=57, wickets=4, runs_last_5=20, wickets_last_5=2)
+print("Predicted Score is ",score, "\nReal Score is 129")
+
+### Testing the model with sample data
+
+- Batting Team : **Royal Challengers Bangalore**
+- Bowling Team : **Delhi Daredevils**
+- Final Score : 161/6
+
+batting_team='Royal Challengers Bangalore'
+bowling_team='Delhi Daredevils'
+score = prediction_of_score(batting_team, bowling_team, overs=13, runs=96, wickets=1, runs_last_5=48, wickets_last_5=0)
+print("Predicted Score is ",score, "\nReal Score is 161")
+
+T20 Cricket is unpredictable, one over or one main wicket can change the whole game, even though it is tough to predict the socre machine learning have performed with good accuracy  
+
+# Save the Models
+
+from joblib import dump
+
+dump(random_forest, "random_forest.pkl")
+dump(neural_networks, "neural_networks.pkl")
+dump(decision_tree, "decision_tree.pkl")
+dump(KNN, "k_nearest_neighbors.pkl")
